@@ -11,101 +11,142 @@
 	<canvas id="glCanvas"></canvas>
 
 	<script>
-		const canvas = document.getElementById('glCanvas');
-		const gl = canvas.getContext('webgl');
+		function createShaderProgram(gl, vertexShaderSource, fragmentShaderSource)
+		{
+			const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+			gl.shaderSource(vertexShader, vertexShaderSource);
+			gl.compileShader(vertexShader);
 
-		const vertexShaderSource = `
-			attribute vec2 coordinates;
-            void main() {
-                gl_Position = vec4(coordinates, 0.0, 1.0);
-            }
-        `;
+			const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+			gl.shaderSource(fragmentShader, fragmentShaderSource);
+			gl.compileShader(fragmentShader);
 
-		const fragmentShaderSource = `
-            void main() {
-				gl_FragColor = vec4(0.0, 0.588235, 0.494118, 1.0);
-				// gl_FragColor = vec4(0.588235, 0.0, 0.094118, 1.0);
-            }
-        `;
+			const shaderProgram = gl.createProgram();
+			gl.attachShader(shaderProgram, vertexShader);
+			gl.attachShader(shaderProgram, fragmentShader);
+			gl.linkProgram(shaderProgram);
 
-		const vertexShader = gl.createShader(gl.VERTEX_SHADER);
-		gl.shaderSource(vertexShader, vertexShaderSource);
-		gl.compileShader(vertexShader);
+			return shaderProgram;
+		}
 
-		const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-		gl.shaderSource(fragmentShader, fragmentShaderSource);
-		gl.compileShader(fragmentShader);
+		function createVertexBuffer(gl, vertexShaderSource, fragmentShaderSource, vertices)
+		{
+			const shaderProgram = createShaderProgram(gl, vertexShaderSource, fragmentShaderSource);
+			gl.useProgram(shaderProgram);
 
-		const shaderProgram = gl.createProgram();
-		gl.attachShader(shaderProgram, vertexShader);
-		gl.attachShader(shaderProgram, fragmentShader);
-		gl.linkProgram(shaderProgram);
-		gl.useProgram(shaderProgram);
+			const vertexBuffer = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+			gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-		const vertices = new Float32Array([
-			// H
-			-0.21, 0.55, -0.21, -0.55, -0.27, -0.42,
-			-0.22, 0.05, -0.22, -0.08, -0.1, 0.03,
-			-0.14, 0.45, -0.09, 0.2, -0.14, -0.65,
+			const coordAttribute = gl.getAttribLocation(shaderProgram, "coordinates");
+			gl.enableVertexAttribArray(coordAttribute);
+			gl.vertexAttribPointer(coordAttribute, 2, gl.FLOAT, false, 0, 0);
+		}
 
-			// i
-			-0.02, 0.33, -0.05, 0.45, 0, 0.43,
-			-0.02, 0.3, -0.06, -0.6, 0.01, -0.2,
+		function main()
+		{
+			const canvas = document.getElementById('glCanvas');
+			const gl = canvas.getContext('webgl');
 
-			// s
-			0.05, 0.2, 0.25, 0.3, 0.28, 0.14,
-			0.05, 0.2, 0.12, 0.2, 0.08, -0.1,
-			0.07, 0.01, 0.08, -0.14, 0.26, -0.18,
-			0.2, -0.13, 0.26, -0.18, 0.23, -0.53,
-			0.23, -0.4, 0.23, -0.53, 0.05, -0.4,
-			0.05, -0.4, 0.1, -0.4, 0.05, -0.3
-		]);
+			function resizer()
+			{
+				canvas.width = window.innerWidth - 20;
+				canvas.height = window.innerHeight - 20;
+				gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+			}
 
-		// const vertices = new Float32Array([
-		// 	// H
-		// 	-0.3, 0.5, -0.25, -0.5,
-		// 	-0.275, 0.0, -0.075, 0.0,
-		// 	-0.1, 0.5, -0.05, -0.5,
+			window.addEventListener('resize',resizer);
 
-		// 	// I
-		// 	0.0, 0.5, 0.0, -0.5,
-			
-		// 	// S
-		// 	0.3, 0.5, 0.1, 0.5,
-		// 	0.1, 0.5, 0.075, 0.0,
-		// 	0.075, 0.0, 0.275, 0.0,
-		// 	0.275, 0.0, 0.25, -0.5,
-		// 	0.25, -0.5, 0.05, -0.5
-		// ]);
+			let currentFrame = 0;
+			let lastTimestamp = 0;
 
-		const vertexBuffer = gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-		gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+			const vertexShaderSource = `
+				attribute vec2 coordinates;
+				void main() {
+					gl_Position = vec4(coordinates, 0.0, 1.0);
+				}
+			`;
 
-		const coordAttribute = gl.getAttribLocation(shaderProgram, "coordinates");
-		gl.enableVertexAttribArray(coordAttribute);
-		gl.vertexAttribPointer(coordAttribute, 2, gl.FLOAT, false, 0, 0);
+			function render(timestamp) {
+				if (timestamp - lastTimestamp >= 3000) {
+					currentFrame = 1 - currentFrame;
+					lastTimestamp = timestamp;
+				}
 
-		function render() {
-			gl.clearColor(0.588235, 0.0, 0.094118, 1.0);
-			// gl.clearColor(0.0, 0.0, 0.0, 1.0);
-			gl.clear(gl.COLOR_BUFFER_BIT);
-			gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
-			// gl.drawArrays(gl.LINES, 0, vertices.length / 2);
+				if (currentFrame == 0) {
+					// gl.LINES
 
+					const fragmentShaderSource = `
+						void main() {
+							gl_FragColor = vec4(0.588235, 0.0, 0.094118, 1.0);
+						}
+					`;
+
+					const vertices = new Float32Array([
+						// H
+						-0.3, 0.5, -0.25, -0.5,
+						-0.275, 0.0, -0.075, 0.0,
+						-0.1, 0.5, -0.05, -0.5,
+
+						// I
+						0.0, 0.5, 0.0, -0.5,
+						
+						// S
+						0.3, 0.5, 0.1, 0.5,
+						0.1, 0.5, 0.075, 0.0,
+						0.075, 0.0, 0.275, 0.0,
+						0.275, 0.0, 0.25, -0.5,
+						0.25, -0.5, 0.05, -0.5
+					]);
+
+					createVertexBuffer(gl, vertexShaderSource, fragmentShaderSource, vertices);
+
+					gl.clearColor(0.0, 0.0, 0.0, 1.0);
+					gl.clear(gl.COLOR_BUFFER_BIT);
+					gl.drawArrays(gl.LINES, 0, vertices.length / 2);
+				} else {
+					// gl.TRIANGLES
+
+					const fragmentShaderSource = `
+						void main() {
+							gl_FragColor = vec4(0.0, 0.588235, 0.494118, 1.0);
+						}
+					`;
+
+					const vertices = new Float32Array([
+						// H
+						-0.21, 0.55, -0.21, -0.55, -0.27, -0.42,
+						-0.22, 0.05, -0.22, -0.08, -0.1, 0.03,
+						-0.14, 0.45, -0.09, 0.2, -0.14, -0.65,
+
+						// i
+						-0.02, 0.33, -0.05, 0.45, 0, 0.43,
+						-0.02, 0.3, -0.06, -0.6, 0.01, -0.2,
+
+						// s
+						0.05, 0.2, 0.25, 0.3, 0.28, 0.14,
+						0.05, 0.2, 0.12, 0.2, 0.08, -0.1,
+						0.07, 0.01, 0.08, -0.14, 0.26, -0.18,
+						0.2, -0.13, 0.26, -0.18, 0.23, -0.53,
+						0.23, -0.4, 0.23, -0.53, 0.05, -0.4,
+						0.05, -0.4, 0.1, -0.4, 0.05, -0.3
+					]);
+
+					createVertexBuffer(gl, vertexShaderSource, fragmentShaderSource, vertices);
+
+					gl.clearColor(0.588235, 0.0, 0.094118, 1.0);
+					gl.clear(gl.COLOR_BUFFER_BIT);
+					gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
+				}
+				
+				requestAnimationFrame(render);
+			}
+
+			resizer();
 			requestAnimationFrame(render);
 		}
 
-		function resizer() {
-			canvas.width = window.innerWidth - 20;
-			canvas.height = window.innerHeight - 20;
-			console.log(canvas.width + " " + canvas.height);
-			gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-			render();
-		}
-
-		resizer();
-		window.addEventListener('resize',resizer);
+		window.onload = main;
 	</script>
 </body>
 
