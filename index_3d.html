@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tugas WebGL - Huruf 3D</title>
+</head>
+
+<body>
+    <canvas id="glCanvas"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.4.0/gl-matrix.js"></script>
+
+    <script>
+        const canvas = document.getElementById('glCanvas');
+        const gl = canvas.getContext('webgl');
+
+        // penyesuai ukuran kanvas dengan ukuran browser
+        function resizer() {
+            canvas.width = window.innerWidth - 20;
+            canvas.height = window.innerHeight - 20;
+            gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        }
+
+        window.addEventListener('resize', resizer);
+        resizer();
+
+        const cubeVertices = [];
+        const cubeColors = [];
+        const cubeIndices = [];
+
+        // Define cube vertices
+        cubeVertices[0] = new Float32Array([
+            // Front face
+            -1.0, -1.0, 1.0,
+            -0.8, -1.0, 1.0,
+            -0.8, 1.0, 1.0,
+            -1.0, 1.0, 1.0,
+            // Back face
+            -1.0, -1.0, 0.0,
+            -0.8, -1.0, 0.0,
+            -0.8, 1.0, 0.0,
+            -1.0, 1.0, 0.0,
+            // Left face
+            -1.0, -1.0, 0.0,
+            -1.0, -1.0, 1.0,
+            -1.0, 1.0, 1.0,
+            -1.0, 1.0, 0.0,
+            // Right face
+            -0.8, -1.0, 0.0,
+            -0.8, -1.0, 1.0,
+            -0.8, 1.0, 1.0,
+            -0.8, 1.0, 0.0,
+            // Top face
+            -1.0, 1.0, 0.0,
+            -0.8, 1.0, 0.0,
+            -0.8, 1.0, 1.0,
+            -1.0, 1.0, 1.0,
+            // Bottom face
+            -1.0, -1.0, 0.0,
+            -0.8, -1.0, 0.0,
+            -0.8, -1.0, 1.0,
+            -1.0, -1.0, 1.0,
+        ]);
+
+        cubeVertices[1] = new Float32Array([
+            // Front face
+            -0.8, -0.1, 1.0,
+            -0.5, -0.1, 1.0,
+            -0.5, 0.1, 1.0,
+            -0.8, 0.1, 1.0,
+            // Back face
+            -0.8, -0.1, 0.0,
+            -0.5, -0.1, 0.0,
+            -0.5, 0.1, 0.0,
+            -0.8, 0.1, 0.0,
+            // Left face
+            -0.8, -0.1, 0.0,
+            -0.8, -0.1, 1.0,
+            -0.8, 0.1, 1.0,
+            -0.8, 0.1, 0.0,
+            // Right face
+            -0.5, -0.1, 0.0,
+            -0.5, -0.1, 1.0,
+            -0.5, 0.1, 1.0,
+            -0.5, 0.1, 0.0,
+            // Top face
+            -0.8, 0.1, 0.0,
+            -0.5, 0.1, 0.0,
+            -0.5, 0.1, 1.0,
+            -0.8, 0.1, 1.0,
+            // Bottom face
+            -0.8, -0.1, 0.0,
+            -0.5, -0.1, 0.0,
+            -0.5, -0.1, 1.0,
+            -0.8, -0.1, 1.0,
+        ]);
+
+        cubeVertices[2] = new Float32Array([
+            // Front face
+            -0.5, -1.0, 1.0,
+            -0.3, -1.0, 1.0,
+            -0.3, 1.0, 1.0,
+            -0.5, 1.0, 1.0,
+            // Back face
+            -0.5, -1.0, 0.0,
+            -0.3, -1.0, 0.0,
+            -0.3, 1.0, 0.0,
+            -0.5, 1.0, 0.0,
+            // Left face
+            -0.5, -1.0, 0.0,
+            -0.5, -1.0, 1.0,
+            -0.5, 1.0, 1.0,
+            -0.5, 1.0, 0.0,
+            // Right face
+            -0.3, -1.0, 0.0,
+            -0.3, -1.0, 1.0,
+            -0.3, 1.0, 1.0,
+            -0.3, 1.0, 0.0,
+            // Top face
+            -0.5, 1.0, 0.0,
+            -0.3, 1.0, 0.0,
+            -0.3, 1.0, 1.0,
+            -0.5, 1.0, 1.0,
+            // Bottom face
+            -0.5, -1.0, 0.0,
+            -0.3, -1.0, 0.0,
+            -0.3, -1.0, 1.0,
+            -0.5, -1.0, 1.0,
+        ]);
+
+        cubeVertices[3] = new Float32Array([
+            // Front face
+            -0.1, -1.0, 1.0,
+            0.1, -1.0, 1.0,
+            0.1, 1.0, 1.0,
+            -0.1, 1.0, 1.0,
+            // Back face
+            -0.1, -1.0, 0.0,
+            0.1, -1.0, 0.0,
+            0.1, 1.0, 0.0,
+            -0.1, 1.0, 0.0,
+            // Left face
+            -0.1, -1.0, 0.0,
+            -0.1, -1.0, 1.0,
+            -0.1, 1.0, 1.0,
+            -0.1, 1.0, 0.0,
+            // Right face
+            0.1, -1.0, 0.0,
+            0.1, -1.0, 1.0,
+            0.1, 1.0, 1.0,
+            0.1, 1.0, 0.0,
+            // Top face
+            -0.1, 1.0, 0.0,
+            0.1, 1.0, 0.0,
+            0.1, 1.0, 1.0,
+            -0.1, 1.0, 1.0,
+            // Bottom face
+            -0.1, -1.0, 0.0,
+            0.1, -1.0, 0.0,
+            0.1, -1.0, 1.0,
+            -0.1, -1.0, 1.0,
+        ]);
+
+        cubeVertices[4] = new Float32Array([
+            // Front face
+            0.3, 0.8, 1.0,
+            1.0, 0.8, 1.0,
+            1.0, 1.0, 1.0,
+            0.3, 1.0, 1.0,
+            // Back face
+            0.3, 0.8, 0.0,
+            1.0, 0.8, 0.0,
+            1.0, 1.0, 0.0,
+            0.3, 1.0, 0.0,
+            // Left face
+            0.3, 0.8, 0.0,
+            0.3, 0.8, 1.0,
+            0.3, 1.0, 1.0,
+            0.3, 1.0, 0.0,
+            // Right face
+            1.0, 0.8, 0.0,
+            1.0, 0.8, 1.0,
+            1.0, 1.0, 1.0,
+            1.0, 1.0, 0.0,
+            // Top face
+            0.3, 1.0, 0.0,
+            1.0, 1.0, 0.0,
+            1.0, 1.0, 1.0,
+            0.3, 1.0, 1.0,
+            // Bottom face
+            0.3, 0.8, 0.0,
+            1.0, 0.8, 0.0,
+            1.0, 0.8, 1.0,
+            0.3, 0.8, 1.0,
+        ]);
+
+        cubeVertices[5] = new Float32Array([
+            // Front face
+            0.3, 0.6, 1.0,
+            0.5, 0.6, 1.0,
+            0.5, 0.8, 1.0,
+            0.3, 0.8, 1.0,
+            // Back face
+            0.3, 0.6, 0.0,
+            0.5, 0.6, 0.0,
+            0.5, 0.8, 0.0,
+            0.3, 0.8, 0.0,
+            // Left face
+            0.3, 0.6, 0.0,
+            0.3, 0.6, 1.0,
+            0.3, 0.8, 1.0,
+            0.3, 0.8, 0.0,
+            // Right face
+            0.5, 0.6, 0.0,
+            0.5, 0.6, 1.0,
+            0.5, 0.8, 1.0,
+            0.5, 0.8, 0.0,
+            // Top face
+            0.3, 0.8, 0.0,
+            0.5, 0.8, 0.0,
+            0.5, 0.8, 1.0,
+            0.3, 0.8, 1.0,
+            // Bottom face
+            0.3, 0.6, 0.0,
+            0.5, 0.6, 0.0,
+            0.5, 0.6, 1.0,
+            0.3, 0.6, 1.0,
+        ]);
+
+        cubeVertices[6] = new Float32Array([
+            // Front face
+            0.3, 0.4, 1.0,
+            1.0, 0.4, 1.0,
+            1.0, 0.6, 1.0,
+            0.3, 0.6, 1.0,
+            // Back face
+            0.3, 0.4, 0.0,
+            1.0, 0.4, 0.0,
+            1.0, 0.6, 0.0,
+            0.3, 0.6, 0.0,
+            // Left face
+            0.3, 0.4, 0.0,
+            0.3, 0.4, 1.0,
+            0.3, 0.6, 1.0,
+            0.3, 0.6, 0.0,
+            // Right face
+            1.0, 0.4, 0.0,
+            1.0, 0.4, 1.0,
+            1.0, 0.6, 1.0,
+            1.0, 0.6, 0.0,
+            // Top face
+            0.3, 0.6, 0.0,
+            1.0, 0.6, 0.0,
+            1.0, 0.6, 1.0,
+            0.3, 0.6, 1.0,
+            // Bottom face
+            0.3, 0.4, 0.0,
+            1.0, 0.4, 0.0,
+            1.0, 0.4, 1.0,
+            0.3, 0.4, 1.0,
+        ]);
+
+        cubeVertices[7] = new Float32Array([
+            // Front face
+            0.8, 0.2, 1.0,
+            1.0, 0.2, 1.0,
+            1.0, 0.4, 1.0,
+            0.8, 0.4, 1.0,
+            // Back face
+            0.8, 0.2, 0.0,
+            1.0, 0.2, 0.0,
+            1.0, 0.4, 0.0,
+            0.8, 0.4, 0.0,
+            // Left face
+            0.8, 0.2, 0.0,
+            0.8, 0.2, 1.0,
+            0.8, 0.4, 1.0,
+            0.8, 0.4, 0.0,
+            // Right face
+            1.0, 0.2, 0.0,
+            1.0, 0.2, 1.0,
+            1.0, 0.4, 1.0,
+            1.0, 0.4, 0.0,
+            // Top face
+            0.8, 0.4, 0.0,
+            1.0, 0.4, 0.0,
+            1.0, 0.4, 1.0,
+            0.8, 0.4, 1.0,
+            // Bottom face
+            0.8, 0.2, 0.0,
+            1.0, 0.2, 0.0,
+            1.0, 0.2, 1.0,
+            0.8, 0.2, 1.0,
+        ]);
+
+        cubeVertices[8] = new Float32Array([
+            // Front face
+            0.3, 0.0, 1.0,
+            1.0, 0.0, 1.0,
+            1.0, 0.2, 1.0,
+            0.3, 0.2, 1.0,
+            // Back face
+            0.3, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            1.0, 0.2, 0.0,
+            0.3, 0.2, 0.0,
+            // Left face
+            0.3, 0.0, 0.0,
+            0.3, 0.0, 1.0,
+            0.3, 0.2, 1.0,
+            0.3, 0.2, 0.0,
+            // Right face
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 1.0,
+            1.0, 0.2, 1.0,
+            1.0, 0.2, 0.0,
+            // Top face
+            0.3, 0.2, 0.0,
+            1.0, 0.2, 0.0,
+            1.0, 0.2, 1.0,
+            0.3, 0.2, 1.0,
+            // Bottom face
+            0.3, 0.0, 0.0,
+            1.0, 0.0, 0.0,
+            1.0, 0.0, 1.0,
+            0.3, 0.0, 1.0,
+        ]);
+
+        let o = 0;
+        for(o = 0; o <= 8; o++) {
+            // Define Rubik's Cube colors for each face
+            cubeColors[o] = new Float32Array([
+                // Front face
+                0.0, 0.588235, 0.494118, 1.0,
+                0.0, 0.588235, 0.494118, 1.0,
+                0.0, 0.588235, 0.494118, 1.0,
+                0.0, 0.588235, 0.494118, 1.0,
+                // Back face
+                0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+                // Left face
+                0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+                // Right face
+                0.0, 0.0, 0.0, 1.0,
+                0.588235, 0.0, 0.094118, 1.0,
+                0.588235, 0.0, 0.094118, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+                // Top face
+                0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+                0.588235, 0.0, 0.094118, 1.0,
+                0.588235, 0.0, 0.094118, 1.0,
+                // Bottom face
+                0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+                0.0, 0.0, 0.0, 1.0,
+            ]);
+
+            // Define cube faces (using indices)
+            cubeIndices[o] = new Uint16Array([
+                0, 1, 2, 0, 2, 3,   // Front face
+                4, 5, 6, 4, 6, 7,   // Back face
+                8, 9, 10, 8, 10, 11,   // Left face
+                12, 13, 14, 12, 14, 15,   // Right face
+                16, 17, 18, 16, 18, 19,   // Top face
+                20, 21, 22, 20, 22, 23    // Bottom face
+            ]);
+        }
+
+        // Define vertex shader source code
+        const vertexShaderSource = `
+            attribute vec4 a_position;
+            attribute vec4 a_color;
+            varying vec4 v_color;
+            uniform mat4 u_viewprojectionMatrix;
+
+            void main() {
+                gl_Position = u_viewprojectionMatrix * a_position;
+                v_color = a_color;
+            }
+        `;
+
+        // Define fragment shader source code
+        const fragmentShaderSource = `
+            precision mediump float;
+            varying vec4 v_color;
+
+            void main() {
+                gl_FragColor = v_color;
+            }
+        `;
+
+        // Compile and link shaders
+        const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertexShader, vertexShaderSource);
+        gl.compileShader(vertexShader);
+
+        const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fragmentShader, fragmentShaderSource);
+        gl.compileShader(fragmentShader);
+
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        gl.useProgram(program);
+
+        let n = 0;
+        for(n = 0; n <= 8; n++) {
+            // Create buffers for cube vertices and colors
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, cubeVertices[n], gl.STATIC_DRAW);
+    
+            const colorBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, cubeColors[n], gl.STATIC_DRAW);
+    
+            // Create a buffer for cube indices
+            const indexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, cubeIndices[n], gl.STATIC_DRAW);
+        }
+
+        // Specify attribute and uniform locations
+        const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
+        const colorAttributeLocation = gl.getAttribLocation(program, 'a_color');
+        const viewProjectionMatrixLocation = gl.getUniformLocation(program, 'u_viewprojectionMatrix');
+
+        // Set up attribute pointers
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.enableVertexAttribArray(colorAttributeLocation);
+        gl.vertexAttribPointer(colorAttributeLocation, 4, gl.FLOAT, false, 0, 0);
+
+        // Set up a perspective projection matrix
+        const projectionMatrix = mat4.create();
+        const fieldOfView = Math.PI / 4; // 45 degrees
+        const aspect = canvas.width / canvas.height;
+        const zNear = 0.1;
+        const zFar = 100.0;
+        mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+
+        // Set up the view matrix (camera position and orientation)
+        const viewMatrix = mat4.create();
+        const cameraPosition = vec3.fromValues(2.0, 2.0, 5.0); // Adjust the camera position
+        const targetPosition = vec3.fromValues(0.0, 0.0, 0.0); // Point the camera at the origin
+        const upVector = vec3.fromValues(0.0, 1.0, 0.0); // Define the up vector
+        mat4.lookAt(viewMatrix, cameraPosition, targetPosition, upVector);
+
+        // Combine the view matrix with the projection matrix
+        const viewProjectionMatrix = mat4.create();
+        mat4.multiply(viewProjectionMatrix, projectionMatrix, viewMatrix);
+
+        // Pass the viewProjectionMatrix to your shaders as a uniform
+        gl.uniformMatrix4fv(viewProjectionMatrixLocation, false, viewProjectionMatrix);
+
+        // Rendering loop
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+        function render() {
+            // Clear canvas
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            gl.enable(gl.DEPTH_TEST);
+            gl.viewport(0, 0, canvas.width, canvas.height);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+            let m = 0;
+            for(m = 0; m <= 8; m++) {
+                gl.drawElements(gl.TRIANGLES, cubeIndices[m].length, gl.UNSIGNED_SHORT, 0);
+            }
+
+            requestAnimationFrame(render);
+        }
+        
+        render();
+    </script>
+</body>
+
+</html>
